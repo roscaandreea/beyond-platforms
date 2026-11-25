@@ -131,15 +131,37 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         const SizedBox(height: 16),
                         Semantics(
                           header: true,
-                          child: Text(
-                            'One codebase.\nLimitless experiences.',
-                            style: theme.textTheme.displayLarge?.copyWith(
+                          label: 'One codebase. Limitless experiences.',
+                          excludeSemantics: true,
+                          child: DefaultTextStyle(
+                            style: theme.textTheme.displayLarge!.copyWith(
                               fontSize: compact
                                   ? 43
                                   : width < 1050
                                   ? 60
                                   : 84,
                               height: 1,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('One codebase.'),
+                                ShaderMask(
+                                  blendMode: BlendMode.srcIn,
+                                  shaderCallback: (bounds) => LinearGradient(
+                                    colors: dark
+                                        ? const [
+                                            Color(0xFF7FDEF7),
+                                            Color(0xFFB5A2FF),
+                                          ]
+                                        : const [
+                                            Color(0xFF1264AC),
+                                            Color(0xFF7154BB),
+                                          ],
+                                  ).createShader(bounds),
+                                  child: const Text('Limitless experiences.'),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -174,89 +196,25 @@ class _PortfolioPageState extends State<PortfolioPage> {
                           child: const Playground(),
                         ),
                         const SizedBox(height: 24),
-                        _Pair(
-                          compact: compact,
-                          children: [
-                            _Panel(
-                              key: _about,
-                              label: 'ABOUT',
-                              title: 'Hi, I’m Andreea.',
-                              description: 'I’m a Flutter developer building interfaces for Web, iOS and Android.',
-                            ),
-                            _Panel(
-                              key: _work,
-                              label: 'PROFESSIONAL EXPERIENCE',
-                              title: 'Flutter for banking and fintech',
-                              description: 'My professional Flutter work has focused on banking applications across Web, iOS and Android.',
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        _Pair(
-                          compact: compact,
-                          children: [
-                            const _Panel(
-                              label: 'ENGINEERING EXPERTISE',
-                              title: 'Flutter across platforms',
-                              description:
-                                  'Flutter and Dart · Web · iOS · Android',
-                            ),
-                            _Panel(
-                              label: 'PERSONAL PROJECTS',
-                              title: 'Projects in progress',
-                              description: 'I’ll share personal projects here as they’re ready. In the meantime, explore the Flutter Playground.',
-                              action: TextButton(
-                                onPressed: () => _go(_playground),
-                                child: const Text('Explore the Playground'),
-                              ),
-                            ),
-                          ],
+                        _PortfolioDetails(
+                          useBento: width >= 820,
+                          aboutKey: _about,
+                          workKey: _work,
+                          onExplorePlayground: () => _go(_playground),
                         ),
                         const SizedBox(height: 32),
-                        _Technical('EDUCATION', color: colors.secondary),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Alexandru Ioan Cuza University of Iași',
-                          style: theme.textTheme.titleLarge,
+                        Divider(height: 1, color: colors.outline),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: _EducationRow(compact: compact),
                         ),
-                        const SizedBox(height: 6),
-                        const _Body(
-                          'Faculty of Computer Science · Bachelor’s studies in software engineering.',
-                        ),
-                        const SizedBox(height: 32),
-                        _Panel(
+                        Divider(height: 1, color: colors.outline),
+                        Padding(
                           key: _contact,
-                          label: 'CONTACT',
-                          title: 'Let’s talk Flutter.',
-                          description:
-                              'Get in touch about Flutter opportunities.',
-                          action: Wrap(
-                            spacing: 8,
-                            runSpacing: 4,
-                            children: [
-                              TextButton(
-                                onPressed: () => _open(
-                                  Uri.parse('mailto:andreea.rosca@gmail.com'),
-                                ),
-                                child: const Text('Email'),
-                              ),
-                              TextButton(
-                                onPressed: () => _open(
-                                  Uri.parse(
-                                    'https://www.linkedin.com/in/andreea-maria-rosca-6bb501140/',
-                                  ),
-                                ),
-                                child: const Text('LinkedIn'),
-                              ),
-                              TextButton(
-                                onPressed: () => _open(
-                                  Uri.parse('https://github.com/roscaandreea'),
-                                ),
-                                child: const Text('GitHub'),
-                              ),
-                            ],
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: _ContactRow(compact: compact, onOpen: _open),
                         ),
+                        Divider(height: 1, color: colors.outline),
                         const SizedBox(height: 16),
                         Align(
                           alignment: compact
@@ -278,67 +236,523 @@ class _PortfolioPageState extends State<PortfolioPage> {
   }
 }
 
-class _Pair extends StatelessWidget {
-  const _Pair({required this.compact, required this.children});
-  final bool compact;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) => compact
-      ? Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [children.first, const SizedBox(height: 16), children.last],
-        )
-      : Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: children.first),
-            const SizedBox(width: 24),
-            Expanded(child: children.last),
-          ],
-        );
-}
-
-class _Panel extends StatelessWidget {
-  const _Panel({
-    super.key,
-    required this.label,
-    required this.title,
-    required this.description,
-    this.action,
+class _PortfolioDetails extends StatelessWidget {
+  const _PortfolioDetails({
+    required this.useBento,
+    required this.aboutKey,
+    required this.workKey,
+    required this.onExplorePlayground,
   });
-  final String label;
-  final String title;
-  final String description;
-  final Widget? action;
+
+  final bool useBento;
+  final GlobalKey aboutKey;
+  final GlobalKey workKey;
+  final VoidCallback onExplorePlayground;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final about = _PortfolioCard(
+      key: aboutKey,
+      title: 'About',
+      accent: colors.primary,
+      trailing: const ExcludeSemantics(child: _Monogram()),
+      child: Text.rich(
+        TextSpan(
+          text: 'I’m Andreea, a ',
+          children: [
+            TextSpan(
+              text: 'Flutter developer',
+              style: TextStyle(
+                color: colors.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const TextSpan(
+              text: ' building interfaces for Web, iOS and Android.',
+            ),
+          ],
+        ),
+        style: TextStyle(
+          color: colors.onSurfaceVariant,
+          fontSize: 18,
+          height: 1.5,
+        ),
+      ),
+    );
+
+    Widget expertiseItems(List<(IconData, String)> items, Color foreground) =>
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final (icon, label) in items)
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Color.alphaBlend(
+                    foreground.withValues(alpha: .08),
+                    colors.surface,
+                  ),
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(color: colors.outline),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 6,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ExcludeSemantics(
+                        child: Icon(icon, size: 15, color: foreground),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        label,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: colors.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+
+    final expertise = _PortfolioCard(
+      title: 'Engineering expertise',
+      accent: colors.tertiary,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          expertiseItems(const [
+            (Icons.layers_outlined, 'Flutter'),
+            (Icons.code, 'Dart'),
+          ], colors.primary),
+          const SizedBox(height: 12),
+          Divider(height: 1, color: colors.outline),
+          const SizedBox(height: 12),
+          expertiseItems(const [
+            (Icons.desktop_windows_outlined, 'Web'),
+            (Icons.apple, 'iOS'),
+            (Icons.android, 'Android'),
+          ], colors.tertiary),
+        ],
+      ),
+    );
+    final projectCopy = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Projects in progress', style: theme.textTheme.titleLarge),
+        const SizedBox(height: 6),
+        const _Body('I’ll share personal projects here as they’re ready.'),
+        const SizedBox(height: 4),
+        TextButton.icon(
+          onPressed: onExplorePlayground,
+          style: TextButton.styleFrom(padding: EdgeInsets.zero),
+          iconAlignment: IconAlignment.end,
+          icon: const Icon(Icons.arrow_forward, size: 18),
+          label: const Text('Explore the Playground'),
+        ),
+      ],
+    );
+    final projects = _PortfolioCard(
+      title: 'Personal projects',
+      accent: colors.tertiary,
+      child: useBento
+          ? Row(
+              children: [
+                SizedBox(
+                  width: 106,
+                  height: 90,
+                  child: Stack(
+                    children: [
+                      for (var index = 0; index < 3; index++)
+                        Positioned(
+                          left: index * 14,
+                          bottom: index * 12,
+                          width: 76,
+                          height: 54,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Color.lerp(
+                                  colors.outline,
+                                  colors.primary,
+                                  .10 + index * .16,
+                                )!,
+                              ),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  colors.primary.withValues(alpha: .10),
+                                  colors.surface,
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(child: projectCopy),
+              ],
+            )
+          : projectCopy,
+    );
+    final showBesideCopy = useBento;
+    final copy = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text.rich(
+          TextSpan(
+            text: 'Flutter for ',
+            children: [
+              TextSpan(
+                text: 'banking',
+                style: TextStyle(color: colors.primary),
+              ),
+              const TextSpan(text: ' and '),
+              TextSpan(
+                text: 'fintech',
+                style: TextStyle(color: colors.tertiary),
+              ),
+            ],
+          ),
+          style: showBesideCopy
+              ? theme.textTheme.headlineLarge
+              : theme.textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 12),
+        const _Body(
+          'My professional Flutter work has focused on banking and fintech applications across Web, iOS and Android.',
+        ),
+      ],
+    );
+    final panes = CustomPaint(
+      painter: _ExperiencePanes(colors.primary, colors.tertiary),
+      child: SizedBox(height: showBesideCopy ? 144 : 90),
+    );
+    final experience = _PortfolioCard(
+      key: workKey,
+      title: 'Professional experience',
+      accent: colors.primary,
+      child: showBesideCopy
+          ? Row(
+              children: [
+                Expanded(flex: 6, child: copy),
+                const SizedBox(width: 16),
+                Expanded(flex: 4, child: panes),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                copy,
+                const SizedBox(height: 6),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: SizedBox(width: 180, child: panes),
+                ),
+              ],
+            ),
+    );
+
+    Widget pair(Widget first, Widget second, int firstFlex) => IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(flex: firstFlex, child: first),
+          const SizedBox(width: 20),
+          Expanded(flex: 100 - firstFlex, child: second),
+        ],
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: useBento
+          ? [
+              pair(experience, about, 65),
+              const SizedBox(height: 20),
+              pair(expertise, projects, 43),
+            ]
+          : [
+              experience,
+              const SizedBox(height: 16),
+              about,
+              const SizedBox(height: 16),
+              expertise,
+              const SizedBox(height: 16),
+              projects,
+            ],
+    );
+  }
+}
+
+class _ExperiencePanes extends CustomPainter {
+  const _ExperiencePanes(this.blue, this.violet);
+
+  final Color blue;
+  final Color violet;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = (size.width / 200).clamp(0.0, size.height / 120).toDouble();
+    canvas.translate(
+      (size.width - 200 * scale) / 2,
+      (size.height - 120 * scale) / 2,
+    );
+    canvas.scale(scale);
+    for (final (index, tone) in [
+      violet,
+      Color.lerp(blue, violet, .45)!,
+      blue,
+    ].indexed) {
+      final top = 66.0 - index * 25;
+      final pane = Path()
+        ..moveTo(12, top + 21)
+        ..lineTo(121, top)
+        ..quadraticBezierTo(129, top - 2, 137, top + 1)
+        ..lineTo(190, top + 18)
+        ..quadraticBezierTo(198, top + 21, 189, top + 24)
+        ..lineTo(79, top + 47)
+        ..quadraticBezierTo(71, top + 49, 63, top + 46)
+        ..lineTo(12, top + 28)
+        ..quadraticBezierTo(3, top + 24, 12, top + 21)
+        ..close();
+      final bounds = pane.getBounds();
+      final rim = Color.lerp(tone, Colors.white, .47)!;
+      final thickness = pane.shift(const Offset(0, 2.8));
+      canvas.drawPath(
+        pane.shift(const Offset(2, 6)),
+        Paint()
+          ..color = tone.withValues(alpha: .24)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+      );
+      canvas.drawPath(
+        thickness,
+        Paint()
+          ..shader = LinearGradient(
+            colors: [
+              tone.withValues(alpha: .82),
+              tone.withValues(alpha: .16),
+              rim.withValues(alpha: .46),
+            ],
+          ).createShader(bounds),
+      );
+      canvas.drawPath(
+        pane,
+        Paint()
+          ..shader = LinearGradient(
+            begin: const Alignment(-1, .75),
+            end: const Alignment(1, -.8),
+            stops: const [0, .22, .64, 1],
+            colors: [
+              tone.withValues(alpha: .80),
+              tone.withValues(alpha: .43),
+              tone.withValues(alpha: .13),
+              tone.withValues(alpha: .31),
+            ],
+          ).createShader(bounds),
+      );
+      canvas.drawPath(
+        pane,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.bottomLeft,
+            end: Alignment.topRight,
+            stops: const [0, .26, .61, 1],
+            colors: [
+              rim.withValues(alpha: .9),
+              tone.withValues(alpha: .95),
+              rim.withValues(alpha: .28),
+              tone.withValues(alpha: .48),
+            ],
+          ).createShader(bounds)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = .85,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ExperiencePanes oldDelegate) =>
+      blue != oldDelegate.blue || violet != oldDelegate.violet;
+}
+
+class _PortfolioCard extends StatelessWidget {
+  const _PortfolioCard({
+    super.key,
+    required this.title,
+    required this.child,
+    this.accent,
+    this.trailing,
+  });
+
+  final String title;
+  final Widget child;
+  final Color? accent;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final tint = accent;
+    final heading = Semantics(
+      header: true,
+      child: Text(title, style: theme.textTheme.headlineMedium),
+    );
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: colors.outline),
+        gradient: tint == null
+            ? null
+            : LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.center,
+                colors: [
+                  Color.alphaBlend(tint.withValues(alpha: .10), colors.surface),
+                  colors.surface,
+                ],
+              ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(22),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Technical(label, color: colors.tertiary),
+            if (trailing case final ornament?)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: heading),
+                  const SizedBox(width: 12),
+                  ornament,
+                ],
+              )
+            else
+              heading,
             const SizedBox(height: 12),
-            Semantics(
-              header: true,
-              child: Text(title, style: theme.textTheme.headlineMedium),
-            ),
-            const SizedBox(height: 10),
-            _Body(description),
-            if (action != null) ...[const SizedBox(height: 8), action!],
+            child,
           ],
         ),
       ),
+    );
+  }
+}
+
+class _EducationRow extends StatelessWidget {
+  const _EducationRow({required this.compact});
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final title = Semantics(
+      header: true,
+      child: Text('Education', style: theme.textTheme.titleLarge),
+    );
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Alexandru Ioan Cuza University of Iași',
+          style: theme.textTheme.titleMedium,
+        ),
+        const SizedBox(height: 4),
+        const _Body(
+          'Faculty of Computer Science · Bachelor’s studies in software engineering.',
+        ),
+      ],
+    );
+    return compact
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [title, const SizedBox(height: 8), details],
+          )
+        : Row(
+            children: [
+              SizedBox(width: 142, child: title),
+              Container(width: 1, height: 32, color: theme.colorScheme.outline),
+              const SizedBox(width: 28),
+              Expanded(child: details),
+            ],
+          );
+  }
+}
+
+class _ContactRow extends StatelessWidget {
+  const _ContactRow({required this.compact, required this.onOpen});
+
+  final bool compact;
+  final ValueChanged<Uri> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final title = Semantics(
+      header: true,
+      child: Text('Contact', style: theme.textTheme.headlineLarge),
+    );
+    const message = _Body('Get in touch about Flutter opportunities.');
+    final email = FilledButton.icon(
+      onPressed: () => onOpen(Uri.parse('mailto:andreea.rosca@gmail.com')),
+      icon: const Icon(Icons.mail_outline, size: 18),
+      label: const Text('Get in touch'),
+    );
+    final socials = Wrap(
+      spacing: 8,
+      children: [
+        TextButton(
+          onPressed: () => onOpen(
+            Uri.parse(
+              'https://www.linkedin.com/in/andreea-maria-rosca-6bb501140/',
+            ),
+          ),
+          child: const Text('LinkedIn'),
+        ),
+        TextButton(
+          onPressed: () => onOpen(Uri.parse('https://github.com/roscaandreea')),
+          child: const Text('GitHub'),
+        ),
+      ],
+    );
+    final copy = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [title, const SizedBox(height: 8), message],
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (compact)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [copy, const SizedBox(height: 12), email],
+          )
+        else
+          Row(
+            children: [
+              Expanded(child: copy),
+              const SizedBox(width: 16),
+              email,
+            ],
+          ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: compact ? Alignment.centerLeft : Alignment.centerRight,
+          child: socials,
+        ),
+      ],
     );
   }
 }

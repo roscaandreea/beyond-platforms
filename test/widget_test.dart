@@ -13,7 +13,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('One codebase.\nLimitless experiences.'),
+        find.bySemanticsLabel('One codebase. Limitless experiences.'),
         findsOneWidget,
       );
       expect(tester.takeException(), isNull);
@@ -21,6 +21,21 @@ void main() {
       if (width == 390) {
         final copyright = find.text('© 2026 Andreea Rosca');
         expect(tester.getCenter(copyright).dx, closeTo(width / 2, 0.01));
+      }
+
+      if (width == 1440) {
+        final about = tester.getTopLeft(find.text('About').last);
+        final expertise = tester.getTopLeft(find.text('Engineering expertise'));
+        final projects = tester.getTopLeft(find.text('Personal projects'));
+        final experience = tester.getTopLeft(
+          find.text('Professional experience'),
+        );
+        expect(experience.dy, about.dy);
+        expect(experience.dx, lessThan(about.dx));
+        expect(expertise.dy, greaterThan(experience.dy));
+        expect(projects.dy, expertise.dy);
+        expect(projects.dx, greaterThan(expertise.dx));
+        expect(projects.dx, lessThan(about.dx));
       }
 
       final android = find.widgetWithText(InkWell, 'Android');
@@ -58,7 +73,8 @@ void main() {
         );
         expect(web.overlaps(ios), isTrue);
         expect(web.overlaps(androidPreview), isTrue);
-        expect(ios.left, lessThan(web.left));
+        expect(web.center.dx, lessThan(ios.center.dx));
+        expect(ios.center.dx, lessThan(androidPreview.center.dx));
         expect(androidPreview.right, greaterThan(web.right));
         expect(ios.top, greaterThan(androidPreview.top));
       }

@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:material_ui/material_ui.dart';
 
 enum PlatformPreview { web, ios, android }
@@ -92,31 +94,11 @@ class _PlaygroundState extends State<Playground>
                     style: TextStyle(color: Color(0xFFDCE7FB), height: 1.5),
                   ),
                   const SizedBox(height: 20),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final platform in PlatformPreview.values)
-                        ChoiceChip(
-                          label: Text(platform.label),
-                          selected: platform == _selected,
-                          showCheckmark: false,
-                          selectedColor: const Color(0xFF55B7FF),
-                          backgroundColor: const Color(0xFF131C2C),
-                          side: const BorderSide(color: Color(0xFF6682A2)),
-                          labelStyle: TextStyle(
-                            color: platform == _selected
-                                ? const Color(0xFF0B101B)
-                                : Colors.white,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 8,
-                          ),
-                          onSelected: (_) =>
-                              setState(() => _selected = platform),
-                        ),
-                    ],
+                  _GlassPlatformSelector(
+                    selected: _selected,
+                    reduceMotion: _reduceMotion,
+                    onSelected: (platform) =>
+                        setState(() => _selected = platform),
                   ),
                 ],
               );
@@ -166,7 +148,9 @@ class _PlaygroundState extends State<Playground>
                                         milliseconds: _reduceMotion ? 0 : 250,
                                       ),
                                       child: AnimatedOpacity(
-                                        opacity: platform == _selected ? 1 : .7,
+                                        opacity: platform == _selected
+                                            ? 1
+                                            : 0.64,
                                         duration: Duration(
                                           milliseconds: _reduceMotion ? 0 : 250,
                                         ),
@@ -210,6 +194,141 @@ class _PlaygroundState extends State<Playground>
                       ),
               );
             },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GlassPlatformSelector extends StatelessWidget {
+  const _GlassPlatformSelector({
+    required this.selected,
+    required this.reduceMotion,
+    required this.onSelected,
+  });
+
+  final PlatformPreview selected;
+  final bool reduceMotion;
+  final ValueChanged<PlatformPreview> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final highContrast = MediaQuery.highContrastOf(context);
+    final radius = BorderRadius.circular(26);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 300),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: BackdropFilter(
+          enabled: !highContrast,
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              border: Border.all(
+                color: highContrast ? Colors.white : const Color(0x42DCF1FF),
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: highContrast
+                    ? const [Color(0xFF111827), Color(0xFF111827)]
+                    : const [Color(0x39758FAC), Color(0x8C0A1324)],
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: AnimatedAlign(
+                        duration: Duration(
+                          milliseconds: reduceMotion ? 0 : 280,
+                        ),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment(selected.index - 1.0, 0),
+                        child: FractionallySizedBox(
+                          widthFactor: 1 / PlatformPreview.values.length,
+                          heightFactor: 1,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: radius,
+                              border: Border.all(
+                                color: highContrast
+                                    ? Colors.white
+                                    : const Color(0x62EAF8FF),
+                              ),
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: highContrast
+                                    ? const [Colors.white, Colors.white]
+                                    : const [
+                                        Color(0x7BA2D4FA),
+                                        Color(0x4C6C9EC9),
+                                      ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Material(
+                    type: MaterialType.transparency,
+                    child: Row(
+                      children: [
+                        for (final platform in PlatformPreview.values)
+                          Expanded(
+                            child: Semantics(
+                              button: true,
+                              selected: platform == selected,
+                              child: InkWell(
+                                customBorder: const StadiumBorder(),
+                                overlayColor: const WidgetStatePropertyAll(
+                                  Color(0x22FFFFFF),
+                                ),
+                                onTap: () => onSelected(platform),
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    minHeight: 44,
+                                  ),
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                        vertical: 8,
+                                      ),
+                                      child: Text(
+                                        platform.label,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color:
+                                              highContrast &&
+                                                  platform == selected
+                                              ? const Color(0xFF0B101B)
+                                              : Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: platform == selected
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

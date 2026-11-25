@@ -18,11 +18,20 @@ void main() {
       );
       expect(tester.takeException(), isNull);
 
-      final android = find.widgetWithText(ChoiceChip, 'Android');
+      final android = find.widgetWithText(InkWell, 'Android');
       await tester.ensureVisible(android);
       await tester.tap(android);
       await tester.pumpAndSettle();
-      expect(tester.widget<ChoiceChip>(android).selected, isTrue);
+      expect(
+        find.ancestor(
+          of: android,
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics && widget.properties.selected == true,
+          ),
+        ),
+        findsOneWidget,
+      );
       expect(
         find.bySemanticsLabel('Android Flutter Playground preview'),
         findsOneWidget,

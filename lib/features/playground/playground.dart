@@ -134,12 +134,13 @@ class _PlaygroundState extends State<Playground>
                             child: _Device(platform: _selected, selected: true),
                           ),
                         )
-                      : LayoutBuilder(
-                          builder: (context, size) {
-                            final deviceWidth = (size.maxWidth * .72)
-                                .clamp(260.0, 494.0)
-                                .toDouble();
-                            return Stack(
+                      : FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: SizedBox(
+                            width: 642,
+                            height: 380,
+                            child: Stack(
+                              clipBehavior: Clip.none,
                               children: [
                                 for (final platform in [
                                   ...PlatformPreview.values.where(
@@ -149,47 +150,37 @@ class _PlaygroundState extends State<Playground>
                                 ])
                                   Positioned(
                                     key: ValueKey(platform),
-                                    top: switch (platform) {
-                                      PlatformPreview.web => 25,
-                                      PlatformPreview.ios => 155,
-                                      PlatformPreview.android => 118,
+                                    left: switch (platform) {
+                                      PlatformPreview.web => 60,
+                                      PlatformPreview.ios => 10,
+                                      PlatformPreview.android => 500,
                                     },
-                                    left: platform == PlatformPreview.ios
-                                        ? 0
-                                        : null,
-                                    right: platform == PlatformPreview.android
-                                        ? 0
-                                        : null,
-                                    width: platform == PlatformPreview.web
-                                        ? size.maxWidth
-                                        : null,
-                                    child: Center(
-                                      child: AnimatedScale(
-                                        scale: platform == _selected ? 1.04 : 1,
+                                    top: switch (platform) {
+                                      PlatformPreview.web => 12,
+                                      PlatformPreview.ios => 126,
+                                      PlatformPreview.android => 86,
+                                    },
+                                    child: AnimatedScale(
+                                      scale: platform == _selected ? 1.04 : 1,
+                                      duration: Duration(
+                                        milliseconds: _reduceMotion ? 0 : 250,
+                                      ),
+                                      child: AnimatedOpacity(
+                                        opacity: platform == _selected ? 1 : .7,
                                         duration: Duration(
                                           milliseconds: _reduceMotion ? 0 : 250,
                                         ),
-                                        child: AnimatedOpacity(
-                                          opacity: platform == _selected
-                                              ? 1
-                                              : .7,
-                                          duration: Duration(
-                                            milliseconds: _reduceMotion
-                                                ? 0
-                                                : 250,
-                                          ),
-                                          child: _Device(
-                                            platform: platform,
-                                            selected: platform == _selected,
-                                            browserWidth: deviceWidth,
-                                          ),
+                                        child: _Device(
+                                          platform: platform,
+                                          selected: platform == _selected,
+                                          browserWidth: 494,
                                         ),
                                       ),
                                     ),
                                   ),
                               ],
-                            );
-                          },
+                            ),
+                          ),
                         ),
                 ),
                 builder: (context, child) {

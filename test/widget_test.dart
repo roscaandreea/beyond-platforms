@@ -32,6 +32,21 @@ void main() {
           find.bySemanticsLabel('Web Flutter Playground preview'),
           findsNothing,
         );
+      } else {
+        final web = tester.getRect(
+          find.bySemanticsLabel('Web Flutter Playground preview'),
+        );
+        final ios = tester.getRect(
+          find.bySemanticsLabel('iOS Flutter Playground preview'),
+        );
+        final androidPreview = tester.getRect(
+          find.bySemanticsLabel('Android Flutter Playground preview'),
+        );
+        expect(web.overlaps(ios), isTrue);
+        expect(web.overlaps(androidPreview), isTrue);
+        expect(ios.left, lessThan(web.left));
+        expect(androidPreview.right, greaterThan(web.right));
+        expect(ios.top, greaterThan(androidPreview.top));
       }
       expect(tester.takeException(), isNull);
     });

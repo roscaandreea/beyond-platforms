@@ -258,7 +258,12 @@ class _PortfolioPageState extends State<PortfolioPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        const _Body('© 2026 Andreea Rosca'),
+                        Align(
+                          alignment: compact
+                              ? Alignment.center
+                              : Alignment.centerLeft,
+                          child: const _Body('© 2026 Andreea Rosca'),
+                        ),
                         const SizedBox(height: 40),
                       ],
                     ),

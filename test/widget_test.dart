@@ -18,6 +18,11 @@ void main() {
       );
       expect(tester.takeException(), isNull);
 
+      if (width == 390) {
+        final copyright = find.text('© 2026 Andreea Rosca');
+        expect(tester.getCenter(copyright).dx, closeTo(width / 2, 0.01));
+      }
+
       final android = find.widgetWithText(InkWell, 'Android');
       await tester.ensureVisible(android);
       await tester.tap(android);

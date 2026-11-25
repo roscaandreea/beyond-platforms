@@ -14,6 +14,8 @@ flutter test
 flutter build web --release --base-href /beyond-platforms/
 ```
 
+The local web server defaults to [http://localhost:3000/](http://localhost:3000/).
+
 Desktop and tablet highlight a selected preview within the three-device composition. Mobile displays a single preview. The device entrance and switching respect the platform’s reduced-motion preference. Education and contact come from the legacy portfolio.
 
 ## GitHub Pages

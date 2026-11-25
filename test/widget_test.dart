@@ -18,11 +18,25 @@ void main() {
       );
       expect(tester.takeException(), isNull);
 
-      final android = find.widgetWithText(ChoiceChip, 'Android');
+      if (width == 390) {
+        final copyright = find.text('© 2026 Andreea Rosca');
+        expect(tester.getCenter(copyright).dx, closeTo(width / 2, 0.01));
+      }
+
+      final android = find.widgetWithText(InkWell, 'Android');
       await tester.ensureVisible(android);
       await tester.tap(android);
       await tester.pumpAndSettle();
-      expect(tester.widget<ChoiceChip>(android).selected, isTrue);
+      expect(
+        find.ancestor(
+          of: android,
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics && widget.properties.selected == true,
+          ),
+        ),
+        findsOneWidget,
+      );
       expect(
         find.bySemanticsLabel('Android Flutter Playground preview'),
         findsOneWidget,
@@ -32,6 +46,21 @@ void main() {
           find.bySemanticsLabel('Web Flutter Playground preview'),
           findsNothing,
         );
+      } else {
+        final web = tester.getRect(
+          find.bySemanticsLabel('Web Flutter Playground preview'),
+        );
+        final ios = tester.getRect(
+          find.bySemanticsLabel('iOS Flutter Playground preview'),
+        );
+        final androidPreview = tester.getRect(
+          find.bySemanticsLabel('Android Flutter Playground preview'),
+        );
+        expect(web.overlaps(ios), isTrue);
+        expect(web.overlaps(androidPreview), isTrue);
+        expect(ios.left, lessThan(web.left));
+        expect(androidPreview.right, greaterThan(web.right));
+        expect(ios.top, greaterThan(androidPreview.top));
       }
       expect(tester.takeException(), isNull);
     });
